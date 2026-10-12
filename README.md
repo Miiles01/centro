@@ -21,7 +21,7 @@ Todas las fotos y el logo vienen de centrodelcorazon.org (sus archivos de Shopif
 Textos tomados de las páginas publicadas en su menú: Inicio, ¿Quiénes somos?, ¿Cómo lo hacemos?, La comunidad, ¿Por qué Física Cuántica Aplicada?, Cursos, Curso Básico del Corazón, Curso de Milagros, Meditaciones y Contacto.
 
 ## Por confirmar con el cliente
-- Que la foto de `img/ananda.jpg` sea de Ananda.
+- Que la foto de `img/ananda.webp` sea de Ananda.
 - Fechas de la próxima guía, del próximo Curso de Milagros y de la siguiente meditación especial.
 
 ## Personalizar
