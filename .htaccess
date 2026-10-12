@@ -1,0 +1,14 @@
+# HTML, CSS y JS: el navegador siempre revisa si hay versión nueva,
+# así un deploy nunca mezcla archivos viejos con nuevos.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  # Fotos y logo: se guardan en caché un mes
+  <FilesMatch "\.(jpg|jpeg|png|webp|svg)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+
+DirectoryIndex index.html
+Options -Indexes
