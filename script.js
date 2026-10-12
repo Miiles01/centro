@@ -6,24 +6,29 @@
 
   /* ---------- Cosas que no dependen de GSAP ---------- */
 
-  // Imágenes reales: <div data-img="x" data-src="img/foto.jpg|https://respaldo.jpg">
-  // Prueba cada fuente en orden; si ninguna carga, se queda un color sólido de la marca.
-  $('[data-img][data-src]').forEach(box => {
-    const srcs = box.dataset.src.split('|').filter(Boolean);
-    const tryNext = () => {
-      const src = srcs.shift();
-      if (!src) return;
-      const img = new Image();
-      img.onload = () => {
-        // Se pinta como fondo del mismo .media-fill: las animaciones de GSAP siguen apuntando al mismo nodo
-        const fill = box.querySelector(':scope > .media-fill');
-        fill.style.background = `center / cover no-repeat url("${src}")`;
-        fill.classList.add('has-img');
-      };
-      img.onerror = tryNext;
-      img.src = src;
+  // Imágenes: <div data-img="x" data-src="img/foto.webp">. Se pinta como fondo del mismo .media-fill,
+  // así las animaciones de GSAP siguen apuntando al mismo nodo. Si no carga, queda el color sólido.
+  const paint = (box, done) => {
+    const src = box.dataset.src, img = new Image();
+    img.onload = () => {
+      const fill = box.querySelector(':scope > .media-fill');
+      fill.style.backgroundImage = `url("${src}")`;
+      fill.style.backgroundSize = 'cover';
+      fill.style.backgroundPosition = 'center';
+      fill.classList.add('has-img');
+      (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(done);
     };
-    tryNext();
+    img.onerror = done;
+    img.src = src;
+  };
+
+  // La portada espera a su foto (o 2.5 s como máximo) y entra completa con un fade;
+  // el resto de las fotos se pide después para no competir con ella.
+  const heroBox = d.querySelector('.hero [data-src]');
+  const heroReady = new Promise(res => { heroBox ? paint(heroBox, res) : res(); setTimeout(res, 2500); });
+  heroReady.then(() => {
+    root.classList.remove('hero-wait');
+    $('[data-img][data-src]').filter(b => b !== heroBox).forEach(b => paint(b, () => {}));
   });
 
   // Hoja del menú móvil
@@ -166,7 +171,7 @@
     .to('.hero .marquee-track', { yPercent: 0, opacity: 1, duration: 1.6, ease: 'expo.out' }, .3)
     .to('.bar', { yPercent: 0, duration: 1.1 }, .9);
 
-  intro.play();
+  heroReady.then(() => intro.play());
 
   /* ---------- Barra: se oculta al bajar, vuelve al subir + progreso ---------- */
   ScrollTrigger.create({
@@ -250,11 +255,11 @@
   const mm = gsap.matchMedia();
   mm.add({ wide: '(min-width: 768px)', narrow: '(max-width: 767px)' }, ctx => {
     const narrow = ctx.conditions.narrow;
-    const par = narrow ? 3 : 5;   // % de parallax en imágenes
+    const par = narrow ? 0 : 5;   // % de parallax en imágenes (en móvil no: las fotos van a su tamaño natural)
     const lift = narrow ? 40 : 90; // px de deriva del contenido
 
     // Parallax interno de cada imagen
-    $('.media, .bleed, .ratio-23, .thumb').forEach(box => {
+    if (par) $('.media, .bleed, .ratio-23, .thumb').forEach(box => {
       const fill = box.querySelector('.media-fill');
       if (!fill || box.closest('.hero') && !box.classList.contains('media')) return;
       if (box.classList.contains('media')) return; // el hero se maneja abajo
